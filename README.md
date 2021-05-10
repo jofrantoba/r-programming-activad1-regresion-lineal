@@ -1,1 +1,1 @@
-# r-programming-activad1-regresion
+# Práctica 1: Regresión Lineal
