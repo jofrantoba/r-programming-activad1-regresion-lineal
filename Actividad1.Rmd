@@ -1,0 +1,228 @@
+---
+title: "Práctica 1: Regresión Lineal"
+author: "Jonathan Franchesco Torres Baca @jofrantoba"
+date: "8/5/2021"
+output: html_document
+---
+# Ver Documentos útilizados en la práctica
+Revisar documento pdf,csv y puedes cargar el archivo en R markdown
+https://github.com/jofrantoba/r-programming-activad1-regresion
+
+## Load Library
+```{r}
+library(dplyr)
+library(ggplot2)
+```
+
+
+## Pregunta 1
+
+Supongamos que tenemos los puntos p1= (0,2),
+p2=(1,2) y p3=(1,8) y queremos hacer una regresión lineal. ¿Cuál sería el valor
+constante para el modelo base de este conjunto de datos?
+Rpta: 
+Modelo base es la media: 4
+
+
+```{r Pregunta1}
+poinst<-data.frame("X"=c(0,1,1),"Y"=c(2,2,8))
+mean(poinst$Y)
+```
+## Pregunta 2
+Supongamos que tenemos los puntos p1= (0,2),
+p2=(1,2) y p3=(1,8) y queremos hacer una regresión lineal. Probamos con la
+recta y=3x+2. ¿Cuál es el valor para este modelo de la medida SSE?
+Rpta: 18
+```{r Pregunta2}
+modelo_simple <- lm(data = poinst,formula = Y ~ X)
+modelo_simple
+SSE <- sum(modelo_simple$residuals^2)
+SSE
+```
+## Pregunta 3
+Supongamos que tenemos los puntos p1= (0,2),
+p2=(1,2) y p3=(1,8) y queremos hacer una regresión lineal. Probamos con la
+recta y=3x+2. ¿Cuál es el valor para este modelo de la medida SST?
+Rpta: 24
+```{r Pregunta3}
+  SST <- sum((poinst$Y-mean(poinst$Y))^2)
+SST;
+```
+## Pregunta 4
+Supongamos que tenemos los puntos p1= (0,2),
+p2=(1,2) y p3=(1,8) y queremos hacer una regresión lineal. Probamos con la
+recta y=3x+2. ¿Cuál es el valor para este modelo de la medida R2?
+Rpta: R2= 0,25 ;
+Multiple R-squared=0,25
+```{r Pregunta4}
+SSR <- SST - SSE
+R2 <- SSR/SST
+R2;
+summary(modelo_simple)
+```
+## Pregunta 5
+Para un conjunto de 180 registros y 20 variables,
+hemos conseguido un valor R2 de 0.81 utilizando 18 de ellas. ¿Cuál es el valor
+de R2 ajustado?
+Rpta: El coeficiente de determinación es 0,7887578 utilizando 18 variables
+```{r Pregunta5}
+R2 <- 0.81
+n <- 180
+k <- 18
+R2a <- 1-((n-1)/(n-k-1))*(1-R2)
+R2a
+
+```
+## Pregunta 6
+¿Cuántas de las variables de nuestro conjunto de datos
+son de tipo ‘Factor’? (Variables de texto que representan categorías)
+str(moneyball)
+Rpta: 2 (Team,League)
+```{r Pregunta6}
+setwd("/home/jtorres/master/")
+moneyball <- read.csv("baseball.csv")
+glimpse(moneyball)
+# Procedimiento para analizar variables tipo factor
+# countColumn <- function(df,numColumn){
+#   headtitle <- unique(names(df))
+#   conteo <- (data.frame(col=moneyball[,c(headtitle[numColumn])]) %>% count(col))
+#   names(conteo)[1] <- headtitle[numColumn]
+#   return (conteo)
+# }
+# for(i in 1:length(unique(names(moneyball)))){
+#   print(countColumn(moneyball,i))
+# }
+ggplot(moneyball, aes(Team)) + geom_bar()
+ggplot(moneyball, aes(League)) + geom_bar()
+
+```
+
+## Pregunta 7
+Pregunta 1.7 (0.7 pts): ¿Cuál es el valor del primer cuartil (25%) de la variable
+RS?
+Rpta: 641,25
+```{r Pregunta7}
+quantile(moneyball$RS)[2]
+```
+## Pregunta 8
+¿En qué año se produjo la peor diferencia de carreras?
+¿Es decir, en qué año el registro RD es menor?
+Rpta: Diferencia: 896  y Año: 1962
+```{r Pregunta8}
+moneyball$RD = moneyball$RS - moneyball$RA
+moneyball[print(which.min(moneyball$RD)), ]$Year
+# Grafico de dispersión para ver cuantos partidos debe ganar un equipo para llegar a los Playoffs
+# m <- ggplot(moneyball, aes(x = W, y = Team,color = factor(Playoffs)))+
+#  geom_point() +
+#  scale_color_manual(values = c("#000000", "#FF2D00"), name = "Made Playoffs")
+# m + xlab("Wins") 
+```
+## Pregunta 9
+¿Cuál es el valor R2 de este modelo(W vs RD)?
+Rpta: 0,8808104
+```{r Pregunta9}
+# Gráfico de dispersión que muestra la variable RD vs W para 
+# ggplot(moneyball, aes(x = RD,y = W,color = factor(Playoffs))) +
+#  geom_point() +
+#  scale_color_manual(values = c("#000000", "#FF2D00"), name = "Made Playof fs")
+modelW <- lm(W ~ RD, data = moneyball)
+summary(modelW)["r.squared"]
+```
+## Pregunta 10
+Si, por lo que vimos anteriormente, necesitamos 95
+victorias para pasar a los playoffs, ¿cuántas carreras más debemos hacer de
+las que debemos permitir?
+Es decir, si
+W = a0 + a1·RD y
+95 ≤ W,
+entonces, ¿qué valor mínimo de RD cumple la siguiente ecuación?
+95 ≤ a0 + a1·RD
+(donde a0 y a1 son los coeficientes del modelo generado en el ejercicio anterior
+que podemos ver con summary(modelW))
+Rpta: RD mínimo=134 
+```{r Pregunta10}
+minWin <- 95
+valMinRD <-(minWin - modelW$coefficients[1])/modelW$coefficients[2]
+print(ceiling(valMinRD))
+```
+## Pregunta 11
+Si repetimos el mismo modelo “modelRS”
+eliminando la variable BA. ¿Qué valor de R2 nos proporciona el nuevo modelo?
+Rpta: R2=0,9296
+```{r Pregunta11}
+modelRS = lm(RS~OBP+SLG, data=moneyball)
+summary(modelRS)
+# Modelo de regresión con 3 variables
+# modelRS = lm(RS~OBP+SLG+BA, data=moneyball)
+# summary(modelRS)
+```
+## Pregunta 12
+¿Cuál es la predicción para RS del modelo modelRS
+(summary(modelRS)) si utilizamos los valores anteriores de OBP y SLG?
+Rpta: RS=804,987 
+```{r Pregunta12}
+valObp <- c(0.339)
+valSlg <- c(0.430)
+dataTestRS <- data.frame("OBP"=valObp,"SLG"=valSlg)
+str(dataTestRS)
+predictRS <- predict(modelRS,newdata=dataTestRS)
+print(predictRS)
+```
+## Pregunta 13
+¿Cuál es la predicción para RA del modelo modelRA
+(summary(modelRA)) si utilizamos los valores anteriores de OOBP y OSLG?
+Rpta: RA=621,9258 
+```{r #Pregunta13}
+modelRA = lm(RA~OOBP+OSLG, data=moneyball)
+summary(modelRA)
+valOobp <- c(0.307)
+valOsgl<- c(0.373)
+dataTestRA <- data.frame("OOBP"=valOobp,"OSLG"=valOsgl)
+str(dataTestRA)
+predictRA <- predict(modelRA,newdata=dataTestRA)
+print(predictRA)
+```
+## Pregunta 14
+Predice finalmente con los parámetros del modelo
+W (summary(modelW)) y los valores que acabamos de calcular para RS y RA
+el número de victorias del equipo en 2002. ¿Cuál es ese número de victorias?
+Rpta: número de victorias: 100
+```{r Pregunta14}
+ajustadoRS <- 805 
+ajustadoRA <- 622
+ajustadoRD <- ajustadoRS-ajustadoRA
+dataTestW<-data.frame("RD"=c(ajustadoRD))
+valueWPredict <- predict(modelW,newdata=dataTestW)
+print(valueWPredict)
+```
+## Linkografía
+https://github.com/jofrantoba/r-programming-activad1-regresion
+
+https://rpubs.com/Cristina_Gil/Regresion_Lineal_Simple
+
+https://rpubs.com/Cristina_Gil
+
+https://rpubs.com/Joaquin_AR/223351
+
+https://rpubs.com/Joaquin_AR/226291
+
+https://rpubs.com/Joaquin_AR/
+
+https://rpubs.com/joser/RegresionSimple
+
+https://stat.ethz.ch/R-manual/R-devel/library/base/html/00Index.html
+
+https://medium.com/@smitpate08/how-to-easily-find-column-and-row-index-numbers-in-r-f720c435730
+
+https://conceptosclaros.com/importar-datos-r/
+
+https://simplystatistics.org/2015/07/24/stringsasfactors-an-unauthorized-biography/
+
+https://es.r4ds.hadley.nz/factores.html#:~:text=En%20R%2C%20los%20factores%20se,de%20trabajar%20que%20los%20caracteres.
+
+https://towardsdatascience.com/linear-regression-analysis-in-r-fdd59295d4a8
+
+
+
+https://rpubs.com/joser/
+
